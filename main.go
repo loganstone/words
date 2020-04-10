@@ -13,10 +13,88 @@ import (
 )
 
 const (
-	pattern = "\\"
+	pattern      = "\\"
+	prepositions = `aboard
+about
+above
+absent
+across
+after
+against
+along
+alongside
+amid
+among
+amongst
+anti
+around
+as
+at
+before
+behind
+below
+beneath
+beside
+besides
+between
+beyond
+but
+by
+circa
+concerning
+considering
+despite
+down
+during
+except
+excepting
+excluding
+failing
+following
+for
+from
+given
+in
+inside
+into
+like
+minus
+near
+of
+off
+on
+onto
+opposite
+outside
+over
+past
+per
+plus
+regarding
+round
+save
+since
+than
+through
+to
+toward
+towards
+under
+underneath
+unlike
+until
+up
+upon
+versus
+via
+with
+within
+without
+worth`
 )
 
 var isWord = regexp.MustCompile(`^[[:alpha:]]+$`).MatchString
+var mapByPreposition map[string]bool
 
 // Words .
 type Words []*word
@@ -52,6 +130,15 @@ type word struct {
 	num int
 }
 
+func init() {
+	tmp := make(map[string]bool)
+	data := strings.Split(prepositions, "\n")
+	for _, datum := range data {
+		tmp[datum] = true
+	}
+	mapByPreposition = tmp
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("Usage: %s <html page url>\n", os.Args[0])
@@ -77,6 +164,10 @@ func main() {
 		for _, datum := range strings.Split(line, " ") {
 			w := strings.ToLower(datum)
 			if !isWord(w) {
+				continue
+			}
+			// TODO(logan): to option
+			if _, ok := mapByPreposition[w]; ok {
 				continue
 			}
 			if _, ok := data[w]; ok {
