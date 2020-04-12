@@ -104,7 +104,10 @@ func (w Words) Len() int {
 }
 
 func (w Words) Less(i, j int) bool {
-	return w[i].num > w[j].num
+	if w[i].num == w[j].num {
+		return w[i].txt < w[j].txt
+	}
+	return w[i].num < w[j].num
 }
 
 func (w Words) Swap(i, j int) {
