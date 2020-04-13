@@ -91,10 +91,15 @@ with
 within
 without
 worth`
+
+	articles = `the
+a
+an`
 )
 
 var isWord = regexp.MustCompile(`^[[:alpha:]]+$`).MatchString
 var mapByPreposition map[string]bool
+var mapByArticles map[string]bool
 
 // Words .
 type Words []*word
@@ -140,6 +145,12 @@ func init() {
 		tmp[datum] = true
 	}
 	mapByPreposition = tmp
+
+	data = strings.Split(articles, "\n")
+	for _, datum := range data {
+		tmp[datum] = true
+	}
+	mapByArticles = tmp
 }
 
 func main() {
@@ -171,6 +182,10 @@ func main() {
 			}
 			// TODO(logan): to option
 			if _, ok := mapByPreposition[w]; ok {
+				continue
+			}
+			// TODO(logan): to option
+			if _, ok := mapByArticles[w]; ok {
 				continue
 			}
 			if _, ok := data[w]; ok {
