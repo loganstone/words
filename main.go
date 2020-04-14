@@ -10,96 +10,15 @@ import (
 	"strings"
 
 	"jaytaylor.com/html2text"
+
+	"github.com/loganstone/words/list"
 )
 
 const (
-	pattern      = "\\"
-	prepositions = `aboard
-about
-above
-absent
-across
-after
-against
-along
-alongside
-amid
-among
-amongst
-anti
-around
-as
-at
-before
-behind
-below
-beneath
-beside
-besides
-between
-beyond
-but
-by
-circa
-concerning
-considering
-despite
-down
-during
-except
-excepting
-excluding
-failing
-following
-for
-from
-given
-in
-inside
-into
-like
-minus
-near
-of
-off
-on
-onto
-opposite
-outside
-over
-past
-per
-plus
-regarding
-round
-save
-since
-than
-through
-to
-toward
-towards
-under
-underneath
-unlike
-until
-up
-upon
-versus
-via
-with
-within
-without
-worth`
-
-	articles = `the
-a
-an`
+	pattern = "\\"
 )
 
 var isWord = regexp.MustCompile(`^[[:alpha:]]+$`).MatchString
-var mapByPreposition map[string]bool
-var mapByArticles map[string]bool
 
 // Words .
 type Words []*word
@@ -138,21 +57,6 @@ type word struct {
 	num int
 }
 
-func init() {
-	tmp := make(map[string]bool)
-	data := strings.Split(prepositions, "\n")
-	for _, datum := range data {
-		tmp[datum] = true
-	}
-	mapByPreposition = tmp
-
-	data = strings.Split(articles, "\n")
-	for _, datum := range data {
-		tmp[datum] = true
-	}
-	mapByArticles = tmp
-}
-
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("Usage: %s <html page url>\n", os.Args[0])
@@ -181,11 +85,7 @@ func main() {
 				continue
 			}
 			// TODO(logan): to option
-			if _, ok := mapByPreposition[w]; ok {
-				continue
-			}
-			// TODO(logan): to option
-			if _, ok := mapByArticles[w]; ok {
+			if list.IsExclude(w) {
 				continue
 			}
 			if _, ok := data[w]; ok {
