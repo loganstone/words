@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 
 	"jaytaylor.com/html2text"
 
@@ -57,6 +58,11 @@ type word struct {
 	num int
 }
 
+type context struct {
+	sync.Mutex
+	data map[string]int
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("Usage: %s <html page url>\n", os.Args[0])
@@ -76,30 +82,36 @@ func main() {
 		panic(err)
 	}
 
-	data := make(map[string]int)
-	lines := strings.Split(page, "\n")
-	for _, line := range lines {
-		for _, datum := range strings.Split(line, " ") {
-			w := strings.ToLower(datum)
-			if !isWord(w) {
-				continue
+	ctxt := context{data: make(map[string]int)}
+
+	for _, line := range strings.Split(page, "\n") {
+		data := strings.Split(line, " ")
+		go func(data []string) {
+			for _, datum := range data {
+				w := strings.ToLower(datum)
+				if !isWord(w) {
+					continue
+				}
+				// TODO(logan): to option
+				if list.IsExclude(w) {
+					continue
+				}
+
+				ctxt.Lock()
+				if _, ok := ctxt.data[w]; ok {
+					ctxt.data[w]++
+				} else {
+					ctxt.data[w] = 1
+				}
+				ctxt.Unlock()
 			}
-			// TODO(logan): to option
-			if list.IsExclude(w) {
-				continue
-			}
-			if _, ok := data[w]; ok {
-				data[w]++
-			} else {
-				data[w] = 1
-			}
-		}
+		}(data)
 	}
 
 	words := &Words{}
 	heap.Init(words)
 
-	for txt, number := range data {
+	for txt, number := range ctxt.data {
 		heap.Push(words, &word{txt, number})
 	}
 
