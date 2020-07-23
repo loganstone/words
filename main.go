@@ -58,10 +58,7 @@ type word struct {
 	num int
 }
 
-type context struct {
-	sync.Mutex
-	data map[string]int
-}
+var wg sync.WaitGroup
 
 func main() {
 	if len(os.Args) != 2 {
@@ -82,11 +79,13 @@ func main() {
 		panic(err)
 	}
 
-	ctxt := context{data: make(map[string]int)}
+	c := make(chan string)
 
 	for _, line := range strings.Split(page, "\n") {
 		data := strings.Split(line, " ")
+		wg.Add(1)
 		go func(data []string) {
+			defer wg.Done()
 			for _, datum := range data {
 				w := strings.ToLower(datum)
 				if !isWord(w) {
@@ -97,21 +96,30 @@ func main() {
 					continue
 				}
 
-				ctxt.Lock()
-				if _, ok := ctxt.data[w]; ok {
-					ctxt.data[w]++
-				} else {
-					ctxt.data[w] = 1
-				}
-				ctxt.Unlock()
+				c <- w
 			}
 		}(data)
+	}
+
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
+
+	data := make(map[string]int)
+
+	for w := range c {
+		if _, ok := data[w]; ok == true {
+			data[w]++
+		} else {
+			data[w] = 1
+		}
 	}
 
 	words := &Words{}
 	heap.Init(words)
 
-	for txt, number := range ctxt.data {
+	for txt, number := range data {
 		heap.Push(words, &word{txt, number})
 	}
 
