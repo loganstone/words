@@ -80,10 +80,10 @@ func main() {
 	}
 
 	c := make(chan string)
-
-	for _, line := range strings.Split(page, "\n") {
+	lines := strings.Split(page, "\n")
+	wg.Add(len(lines))
+	for _, line := range lines {
 		data := strings.Split(line, " ")
-		wg.Add(1)
 		go func(data []string) {
 			defer wg.Done()
 			for _, datum := range data {
@@ -107,7 +107,6 @@ func main() {
 	}()
 
 	data := make(map[string]int)
-
 	for w := range c {
 		if _, ok := data[w]; ok == true {
 			data[w]++
@@ -118,7 +117,6 @@ func main() {
 
 	words := &Words{}
 	heap.Init(words)
-
 	for txt, number := range data {
 		heap.Push(words, &word{txt, number})
 	}
